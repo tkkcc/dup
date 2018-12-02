@@ -1,0 +1,302 @@
+<html>
+  <head>
+    <style>
+      div.canvas {
+        width: 50%;
+        margin: auto;
+      }
+      span {
+        color: slateblue;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>
+      predict update time of https://manhua.dmzj.com/teixiusizhichuan/ <br />
+      weighting polynomial regression, order:2, weight=e^(lambda*index/length), adam<br />
+      tensorflow.js chart.js <span></span>
+    </h3>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.13.3/dist/tf.min.js"></script>
+    <div class="main">
+      <div class="canvas"><canvas width="10" height="10"></canvas></div>
+    </div>
+    <script>
+      // predict data from f.json using locally weighting regression
+      const data = [
+        { id: 83316, order: 690, title: '66话', size: 1608652, time: 1543674372 },
+        { id: 83078, order: 680, title: '65话', size: 1532197, time: 1543118160 },
+        { id: 83060, order: 670, title: '64话', size: 1894770, time: 1543052613 },
+        { id: 83059, order: 660, title: '63话', size: 2164888, time: 1543052599 },
+        { id: 83043, order: 650, title: '62话', size: 1682671, time: 1542981125 },
+        { id: 83042, order: 640, title: '61话', size: 1558739, time: 1542981081 },
+        { id: 83000, order: 630, title: '60话', size: 1543296, time: 1542888124 },
+        { id: 82998, order: 620, title: '59话', size: 1410285, time: 1542885424 },
+        { id: 82963, order: 610, title: '58话', size: 1552074, time: 1542802416 },
+        { id: 82962, order: 600, title: '57话', size: 1518537, time: 1542802407 },
+        { id: 82923, order: 590, title: '56话', size: 1476985, time: 1542718412 },
+        { id: 82922, order: 580, title: '55话', size: 1811303, time: 1542718368 },
+        { id: 82897, order: 570, title: '54话', size: 1600480, time: 1542629357 },
+        { id: 82895, order: 555, title: '53话', size: 1557291, time: 1542628356 },
+        { id: 82896, order: 550, title: '52话', size: 1805869, time: 1542628821 },
+        { id: 82860, order: 530, title: '51话', size: 1583158, time: 1542531962 },
+        { id: 82814, order: 520, title: '50话', size: 1719005, time: 1542432761 },
+        { id: 82813, order: 510, title: '49话', size: 1576617, time: 1542432752 },
+        { id: 82798, order: 480, title: '48话', size: 1606672, time: 1542369602 },
+        { id: 82797, order: 470, title: '47话', size: 1533050, time: 1542369531 },
+        { id: 82774, order: 460, title: '46话', size: 1846444, time: 1542432803 },
+        { id: 82773, order: 450, title: '45话', size: 1462791, time: 1542284764 },
+        { id: 82730, order: 440, title: '44话', size: 1750830, time: 1542196827 },
+        { id: 82729, order: 430, title: '43话', size: 1774437, time: 1542196042 },
+        { id: 82691, order: 420, title: '42话', size: 1483645, time: 1542111243 },
+        { id: 82690, order: 410, title: '41话', size: 1788882, time: 1542111196 },
+        { id: 82671, order: 400, title: '40话', size: 1502830, time: 1542024890 },
+        { id: 82670, order: 390, title: '39话', size: 1786064, time: 1542023671 },
+        { id: 82625, order: 380, title: '38话', size: 1712879, time: 1541931672 },
+        { id: 82624, order: 370, title: '37话', size: 2035223, time: 1542432790 },
+        { id: 82599, order: 360, title: '36话', size: 1443724, time: 1541846063 },
+        { id: 82598, order: 350, title: '35话', size: 2061384, time: 1541844978 },
+        { id: 82577, order: 340, title: '34话', size: 1760012, time: 1541777889 },
+        { id: 82574, order: 330, title: '33话', size: 1407951, time: 1541771557 },
+        { id: 82541, order: 320, title: '32话', size: 1541488, time: 1541682328 },
+        { id: 82540, order: 310, title: '31话', size: 1531363, time: 1541679516 },
+        { id: 82503, order: 300, title: '30话', size: 1590621, time: 1541592654 },
+        { id: 82479, order: 290, title: '29话', size: 2333931, time: 1541506063 },
+        { id: 82446, order: 280, title: '28话', size: 2136378, time: 1541421901 },
+        { id: 82445, order: 270, title: '27话', size: 2140298, time: 1541421875 },
+        { id: 82377, order: 260, title: '26话', size: 1553824, time: 1541308812 },
+        { id: 82351, order: 250, title: '25话', size: 1900512, time: 1541237433 },
+        { id: 82327, order: 240, title: '24话', size: 1973855, time: 1541159642 },
+        { id: 82283, order: 230, title: '23话', size: 1891457, time: 1541071038 },
+        { id: 82258, order: 220, title: '22话', size: 1786274, time: 1540999251 },
+        { id: 82221, order: 210, title: '21话', size: 1824579, time: 1540901207 },
+        { id: 82175, order: 200, title: '20话', size: 4881897, time: 1540819665 },
+        { id: 82174, order: 190, title: '19话', size: 3500022, time: 1540819639 },
+        { id: 82148, order: 180, title: '18话', size: 4562537, time: 1540725709 },
+        { id: 82118, order: 170, title: '17话', size: 2084748, time: 1540630196 },
+        { id: 82091, order: 160, title: '16话', size: 1523831, time: 1540556446 },
+        { id: 82065, order: 150, title: '15话', size: 1542218, time: 1540467090 },
+        { id: 82037, order: 140, title: '14话', size: 1447336, time: 1540382124 },
+        { id: 82010, order: 130, title: '13话', size: 1541652, time: 1540304022 },
+        { id: 81979, order: 120, title: '12话', size: 1400286, time: 1540211023 },
+        { id: 81978, order: 110, title: '11话', size: 1546542, time: 1540210999 },
+        { id: 81938, order: 100, title: '10话', size: 1380979, time: 1540108151 },
+        { id: 81915, order: 90, title: '9话', size: 1575200, time: 1540025381 },
+        { id: 81895, order: 80, title: '8话', size: 1584572, time: 1539950177 },
+        { id: 81840, order: 70, title: '7话', size: 1268209, time: 1539863771 },
+        { id: 81829, order: 60, title: '6话', size: 1678291, time: 1539832534 },
+        { id: 81775, order: 50, title: '5话', size: 1551186, time: 1539690204 },
+        { id: 81742, order: 40, title: '4话', size: 1340873, time: 1539608108 },
+        { id: 81707, order: 30, title: '3话', size: 1610405, time: 1539507818 },
+        { id: 81688, order: 20, title: '2话', size: 5855447, time: 1541928785 },
+        { id: 81650, order: 10, title: '1话', size: 4290280, time: 1539304727 }
+      ]
+      // use zero init for reproduction
+      const a = tf.variable(tf.scalar(0))
+      const b = tf.variable(tf.scalar(0))
+      const c = tf.variable(tf.scalar(0))
+      const d = tf.variable(tf.scalar(0))
+      // const a = tf.variable(tf.scalar(Math.random()))
+      // const b = tf.variable(tf.scalar(Math.random()))
+      // const c = tf.variable(tf.scalar(Math.random()))
+      // const d = tf.variable(tf.scalar(Math.random()))
+      const lambda = 10
+      const numIterations = 50
+      const learningRate = 0.3
+      const optimizer = tf.train.adam(learningRate)
+      let weight
+      function predict(x) {
+        // y = a * x ^ 3 + b * x ^ 2 + c * x + d
+        return tf.tidy(() => {
+          // return c.mul(x).add(d)
+          // return b
+          //   .mul(x.square())
+          //   .add(c.mul(x))
+          //   .add(d)
+          return a
+            .mul(x.pow(tf.scalar(3, 'int32')))
+            .add(b.mul(x.square()))
+            .add(c.mul(x))
+            .add(d)
+        })
+      }
+
+      // locally weighting
+      function loss(prediction, labels) {
+        const error = prediction
+          .sub(labels)
+          .square()
+          .mul(weight)
+          .mean()
+        return error
+      }
+
+      async function train(xs, ys, numIterations) {
+        for (let iter = 0; iter < numIterations; iter++) {
+          optimizer.minimize(() => {
+            const pred = predict(xs)
+            return loss(pred, ys)
+          })
+          // Use tf.nextFrame to not block the browser.
+          await tf.nextFrame()
+        }
+      }
+      // max-min normalizer and reverse
+      const normalizer = data => {
+        const min = data.min()
+        const max = data.max()
+        const delay = max.sub(min)
+        return {
+          forward(x = data) {
+            return x.sub(min).div(delay)
+          },
+          backward(x = data) {
+            return x.mul(delay).add(min)
+          }
+        }
+      }
+      const format = i => new Date(i * 1000).toISOString().slice(0, 10)
+      const human = i => {
+        const a = new Date(i * 1000)
+        const b = new Date()
+        let c = ((a - b) / (1000 * 60 * 60 * 24)) >> 0
+        if (c === 0) return '今天更新'
+        if (c === 1) return '明天更新'
+        if (c < 7) return c + '天后更新'
+        c = (c / 7) >> 0
+        if (c < 3) return '下周更新'
+        if (c < 5) return c + '周后更新'
+        if (c < 6) return c + '本月更新'
+      }
+      async function main() {
+        // data
+        data.sort((a, b) => a.time - b.time)
+
+        const b = data.map((i, index) => [index, i.time])
+        const len = b.length
+
+        let d = {
+          x: tf.tensor(b.map(i => i[0]), [len, 1]),
+          y: tf.tensor(b.map(i => i[1]), [len, 1])
+        }
+        const n = {
+          x: normalizer(d.x),
+          y: normalizer(d.y)
+        }
+        d = {
+          x: n.x.forward(),
+          y: n.y.forward()
+        }
+        console.log('x:')
+        d.x.print()
+        console.log('y:')
+        d.y.print()
+        // define weight
+        const w = [...Array(len).keys()].map(i =>
+          i < len - 10 ? 0 : Math.exp(i + 10 - len)
+        )
+
+        weight = tf.tensor(w, [w.length, 1])
+        const sum = weight.sum()
+        weight = weight.div(sum)
+        console.log('weight:')
+        weight.print()
+        // train
+        await train(d.x, d.y, numIterations)
+        const p = predict(d.x)
+        console.log('predict:')
+        p.print()
+        // inverse normalize and to number for drawing
+        const q = n.y.backward(p).dataSync()
+
+        // predict next update
+        let next = len
+        next = tf.tensor([next], [1, 1])
+        next = n.x.forward(next)
+        next = predict(next)
+        next = n.y.backward(next).dataSync()
+        console.log(next)
+        document.querySelector('span').innerHTML = human(next)
+        // plot
+        const ctx = document.querySelector('canvas').getContext('2d')
+        const config = {
+          type: 'line',
+          data: {
+            labels: data.map(i => i.title),
+            datasets: [
+              {
+                label: 'history',
+                backgroundColor: 'slateblue',
+                borderColor: 'slateblue',
+                data: data.map(i => i.time),
+                fill: false,
+                showLine: false
+              },
+              {
+                label: 'predict',
+                pointRadius: 0,
+                backgroundColor: 'red',
+                borderColor: 'red',
+                data: q,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            legend: {
+              display: true
+            },
+            title: {
+              display: true,
+              text: '更新记录'
+            },
+            tooltips: {
+              intersect: false,
+              callbacks: {
+                title(item, data) {
+                  return item[0].xLabel + ' ' + format(item[0].yLabel) + '更新'
+                },
+                label() {}
+              }
+            },
+            elements: {
+              line: {
+                // tension: 0 // disables bezier curves
+              }
+            },
+            scales: {
+              xAxes: [
+                {
+                  gridLines: {
+                    display: false
+                  }
+                }
+              ],
+              yAxes: [
+                {
+                  gridLines: {
+                    display: false
+                  },
+                  ticks: {
+                    callback: format
+                  }
+                },
+                {
+                  position: 'right',
+                  gridLines: {
+                    drawOnChartArea: false // only want the grid lines for one axis to show up
+                  }
+                }
+              ]
+            }
+          }
+        }
+        new Chart(ctx, config)
+        // p.dispose()
+      }
+
+      main()
+    </script>
+  </body>
+</html>

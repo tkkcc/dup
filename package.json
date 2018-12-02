@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "got": "^9.3.2",
+    "jsdom": "^13.0.0",
+    "progress": "^2.0.1"
+  }
+}

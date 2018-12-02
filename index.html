@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+      body {
+        text-align: center;
+      }
+      div.regression_canvas {
+        background: #fefefe;
+        display: none;
+        padding: 1em 1em 0 1em;
+        width: 25em;
+        left: -20em;
+        top: 1.3em;
+      }
+      span.regression_app:hover > div {
+        display: inline-block;
+        position: absolute;
+      }
+      span.regression_app {
+        position: relative;
+        color: slateblue;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="./regression.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+    <div>
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Soluta dignissimos laborum
+      minus ea sapiente necessitatibus dicta neque deserunt repellat a hic veniam corrupti
+      officia, ad rem ratione sint officiis nobis!
+      <span class="regression_app">
+        ...
+        <div class="regression_canvas">
+          <canvas id="myChart" width="10" height="10"></canvas>
+        </div>
+      </span>
+    </div>
+    <div>
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam odit in consectetur
+      expedita quisquam voluptas ut amet deleniti quasi. Expedita nisi totam excepturi
+      exercitationem sequi? Repudiandae voluptates vero sunt autem?
+    </div>
+    <script>
+      const format = i => new Date(i * 1000).toISOString().slice(0, 10)
+      const human = i => {
+        const a = new Date(i * 1000)
+        const b = new Date()
+        let c = ((a - b) / (1000 * 60 * 60 * 24)) >> 0
+        if (c === 0) return '今天更新'
+        if (c === 1) return '明天更新'
+        if (c < 7) return c + '天后更新'
+        c = (c / 7) >> 0
+        if (c < 3) return c + '下周更新'
+        if (c < 5) return c + '周后更新'
+        if (c < 6) return c + '本月更新'
+      }
+      var ctx = document.getElementById('myChart').getContext('2d')
+      ;(async () => {
+        let a = await fetch('./f.json')
+        a = await a.json()
+        if (a.length < 5) return
+        a.sort((a, b) => a.time - b.time)
+        let b = a.slice(-5).map((i, index) => [index, i.time])
+        const result = regression.polynomial(b, { order: 2 })
+        let d = result.predict(b.length)
+        d = human(d[1])
+        if (!d) return
+        document.querySelector('.regression_app').firstChild.nodeValue = d
+        var config = {
+          type: 'line',
+          data: {
+            labels: a.map(i => i.title),
+            datasets: [
+              {
+                backgroundColor: 'slateblue',
+                borderColor: 'slateblue',
+                data: a.map(i => i.time),
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            legend: {
+              display: false
+            },
+
+            tooltips: {
+              intersect: false,
+              callbacks: {
+                title(item, data) {
+                  console.log(item)
+                  return item[0].xLabel + ' ' + format(item[0].yLabel) + '更新'
+                },
+                label() {}
+              }
+            },
+            elements: {
+              line: {
+                tension: 0 // disables bezier curves
+              }
+            },
+            scales: {
+              xAxes: [
+                {
+                  gridLines: {
+                    display: false
+                  }
+                }
+              ],
+              yAxes: [
+                {
+                  gridLines: {
+                    display: false
+                  },
+                  ticks: {
+                    callback: format
+                  }
+                }
+              ]
+            }
+          }
+        }
+        new Chart(ctx, config)
+      })()
+    </script>
+  </body>
+</html>
