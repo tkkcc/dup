@@ -1,10 +1,10 @@
 # dmzj update predict
 
-[greasyfork](https://greasyfork.org/en/scripts/372890-bilibili%E4%B8%89%E8%BF%9E)	
+[greasyfork](https://greasyfork.org/en/scripts/375087-dup)	
 
-![](include/DeepinScreenshot_select-area_20181202183339.png)
+![](https://raw.githubusercontent.com/tkkcc/dup/master/include/DeepinScreenshot_select-area_20181202183339.png)
 
-![](include/DeepinScreenshot_select-area_20181202183423.png)
+![](https://raw.githubusercontent.com/tkkcc/dup/master/include/DeepinScreenshot_select-area_20181202183423.png)
 
 
 
