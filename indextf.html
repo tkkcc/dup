@@ -109,15 +109,15 @@
         // y = a * x ^ 3 + b * x ^ 2 + c * x + d
         return tf.tidy(() => {
           // return c.mul(x).add(d)
-          // return b
-          //   .mul(x.square())
-          //   .add(c.mul(x))
-          //   .add(d)
-          return a
-            .mul(x.pow(tf.scalar(3, 'int32')))
-            .add(b.mul(x.square()))
+          return b
+            .mul(x.square())
             .add(c.mul(x))
             .add(d)
+          // return a
+          //   .mul(x.pow(tf.scalar(3, 'int32')))
+          //   .add(b.mul(x.square()))
+          //   .add(c.mul(x))
+          //   .add(d)
         })
       }
 
@@ -208,7 +208,7 @@
         p.print()
         // inverse normalize and to number for drawing
         const q = n.y.backward(p).dataSync()
-
+        
         // predict next update
         let next = len
         next = tf.tensor([next], [1, 1])
@@ -280,12 +280,6 @@
                   },
                   ticks: {
                     callback: format
-                  }
-                },
-                {
-                  position: 'right',
-                  gridLines: {
-                    drawOnChartArea: false // only want the grid lines for one axis to show up
                   }
                 }
               ]
